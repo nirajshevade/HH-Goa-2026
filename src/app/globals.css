@@ -1,0 +1,143 @@
+@import "tailwindcss";
+
+/* HH Goa 2026 tokens — mirrored from src/lib/brand.ts */
+@theme {
+  --color-goa-green: #0c5c31;
+  --color-goa-deep: #0a4e2a;
+  --color-goa-yellow: #ffe600;
+  --color-goa-yellow-shadow: #c9b500;
+  --color-goa-yellow-hi: #fff04d;
+  --color-goa-pink: #ff1f7a;
+  --color-goa-cream: #fff9e8;
+
+  /* Right-hand side variables are set by next/font — see src/lib/fonts.ts */
+  --font-display: var(--font-bodoni), "Bodoni Moda", serif;
+  --font-mono: var(--font-space-mono), ui-monospace, monospace;
+  --font-sticker: var(--font-baloo), "Baloo 2", sans-serif;
+}
+
+@layer base {
+  html {
+    background-color: var(--color-goa-green);
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-goa-green);
+    color: var(--color-goa-cream);
+    font-family: var(--font-mono);
+    -webkit-font-smoothing: antialiased;
+    /* The design is a single centred column; nothing may spill sideways. */
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    background: var(--color-goa-pink);
+    color: var(--color-goa-cream);
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--color-goa-yellow);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  /* Inputs must never zoom the viewport on iOS — 16px is the threshold. */
+  input,
+  button,
+  textarea,
+  select {
+    font: inherit;
+    font-size: max(16px, 1em);
+  }
+}
+
+@layer utilities {
+  .safe-bottom {
+    padding-bottom: calc(1.75rem + env(safe-area-inset-bottom));
+  }
+
+  /* The chunky offset shadow under the primary button in the approved design. */
+  .btn-chunky {
+    box-shadow: 0 8px 0 var(--color-goa-yellow-shadow);
+    transition:
+      transform 0.12s ease,
+      box-shadow 0.12s ease,
+      background-color 0.15s ease;
+  }
+
+  .btn-chunky:active {
+    transform: translateY(4px);
+    box-shadow: 0 4px 0 var(--color-goa-yellow-shadow);
+  }
+}
+
+@keyframes hh-pop {
+  0% {
+    transform: scale(0.86) rotate(-6deg);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.04) rotate(-3deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(-4deg);
+    opacity: 1;
+  }
+}
+
+@keyframes hh-rise {
+  from {
+    transform: translateY(14px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes hh-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes hh-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.animate-hh-pop {
+  animation: hh-pop 0.5s ease both;
+}
+.animate-hh-rise {
+  animation: hh-rise 0.35s ease both;
+}
+.animate-hh-spin {
+  animation: hh-spin 3.4s linear infinite;
+}
+.animate-hh-blink {
+  animation: hh-blink 1.1s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-hh-pop,
+  .animate-hh-rise,
+  .animate-hh-spin,
+  .animate-hh-blink {
+    animation: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+  }
+}
