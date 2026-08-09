@@ -71,7 +71,8 @@ export async function POST(request: Request): Promise<NextResponse> {
   let entry;
   try {
     entry = await putShare({ bytes, format: validation.format, name });
-  } catch {
+  } catch (e) {
+    console.error("Blob upload error:", e);
     // Storage being unavailable must not break sharing — the client falls back
     // to opening X with the caption alone.
     return NextResponse.json(
