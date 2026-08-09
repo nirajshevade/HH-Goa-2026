@@ -4,7 +4,7 @@ type Variant = "primary" | "pink" | "outline" | "ghost";
 
 const VARIANTS: Record<Variant, string> = {
   primary:
-    "btn-chunky bg-goa-yellow text-goa-green font-bold tracking-[0.06em] hover:bg-goa-yellow-hi",
+    "btn-chunky btn-peel bg-goa-yellow text-goa-green font-bold tracking-[0.06em] hover:bg-goa-yellow-hi",
   pink: "border-2 border-goa-pink bg-goa-pink text-goa-cream font-bold tracking-[0.06em] hover:bg-goa-green hover:text-goa-pink",
   outline:
     "border-[1.5px] border-goa-cream/35 text-goa-cream hover:border-goa-yellow hover:text-goa-yellow",

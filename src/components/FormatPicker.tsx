@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback, useRef, useState } from "react";
 import type { GraphicFormat } from "@/lib/graphics/types";
 
 interface FormatPickerProps {
@@ -46,6 +47,9 @@ interface FormatTileProps {
   preview: React.ReactNode;
 }
 
+/** Maximum tilt angle in degrees. */
+const MAX_TILT = 14;
+
 function FormatTile({
   format,
   checked,
@@ -54,8 +58,48 @@ function FormatTile({
   hint,
   preview,
 }: FormatTileProps) {
+  const tileRef = useRef<HTMLLabelElement>(null);
+  const [tilt, setTilt] = useState({ x: 0, y: 0 });
+  const [hovering, setHovering] = useState(false);
+
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent<HTMLLabelElement>) => {
+      const el = tileRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      // -1 to 1 from center
+      const px = (e.clientX - rect.left) / rect.width - 0.5;
+      const py = (e.clientY - rect.top) / rect.height - 0.5;
+      // rotateX: negative py → tilt top toward viewer
+      setTilt({ x: -py * MAX_TILT, y: px * MAX_TILT });
+    },
+    [],
+  );
+
+  const handleEnter = useCallback(() => setHovering(true), []);
+  const handleLeave = useCallback(() => {
+    setHovering(false);
+    setTilt({ x: 0, y: 0 });
+  }, []);
+
+  const tiltStyle: React.CSSProperties = {
+    perspective: "800px",
+    transformStyle: "preserve-3d",
+    transform: hovering
+      ? `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) scale(1.03)`
+      : "rotateX(0deg) rotateY(0deg) scale(1)",
+    transition: hovering
+      ? "transform 0.08s ease-out"
+      : "transform 0.35s ease-out",
+  };
+
   return (
     <label
+      ref={tileRef}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={handleEnter}
+      onMouseLeave={handleLeave}
+      style={tiltStyle}
       className={`block cursor-pointer rounded-[22px] border-2 p-3 transition-colors has-[:focus-visible]:outline has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-goa-yellow ${
         checked
           ? "border-goa-yellow bg-goa-yellow/12"

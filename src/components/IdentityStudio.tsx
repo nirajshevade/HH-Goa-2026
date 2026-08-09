@@ -23,6 +23,9 @@ type Screen = "landing" | "form" | "generating" | "result";
 
 const EMPTY_INPUT: BuilderInput = { name: "", stack: "", building: "" };
 
+/** Duration of the page-peel animation (ms). Must match CSS. */
+const PEEL_DURATION = 600;
+
 /**
  * The whole flow: pick a format, drop in a photo, (for Format B) add two
  * fields, generate, download, share. One page, no navigation, no account.
@@ -35,6 +38,11 @@ export function IdentityStudio() {
   const [graphic, setGraphic] = useState<ExportedGraphic | null>(null);
   const [error, setError] = useState("");
   const [uploading, setUploading] = useState(false);
+
+  /** When true the current screen plays the peel-away animation. */
+  const [peeling, setPeeling] = useState(false);
+  /** Stores what we should do once the peel finishes. */
+  const pendingAction = useRef<(() => void) | null>(null);
 
   // Guards against a slow decode landing after the user has moved on.
   const loadToken = useRef(0);
@@ -50,6 +58,30 @@ export function IdentityStudio() {
     },
     [],
   );
+
+  /**
+   * Kick off the peel animation, then run `action` once it completes.
+   * If reduced-motion is active the action fires immediately.
+   */
+  const peelThen = useCallback((action: () => void) => {
+    const prefersReduced = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+
+    if (prefersReduced) {
+      action();
+      return;
+    }
+
+    pendingAction.current = action;
+    setPeeling(true);
+
+    setTimeout(() => {
+      setPeeling(false);
+      pendingAction.current?.();
+      pendingAction.current = null;
+    }, PEEL_DURATION);
+  }, []);
 
   const handleFile = useCallback(async (file: File) => {
     const token = ++loadToken.current;
@@ -107,11 +139,16 @@ export function IdentityStudio() {
   const handleNext = useCallback(() => {
     if (!photo) return;
     if (format === "pfp") {
-      void runGeneration(photo, "pfp");
+      peelThen(() => void runGeneration(photo, "pfp"));
     } else {
-      setScreen("form");
+      peelThen(() => setScreen("form"));
     }
-  }, [format, photo, runGeneration]);
+  }, [format, photo, peelThen, runGeneration]);
+
+  const handleFormSubmit = useCallback(() => {
+    if (!photo) return;
+    peelThen(() => void runGeneration(photo, "id"));
+  }, [photo, peelThen, runGeneration]);
 
   const handleReset = useCallback(() => {
     loadToken.current += 1;
@@ -130,7 +167,9 @@ export function IdentityStudio() {
       <BrandHeader />
 
       {screen === "landing" && (
-        <div className="flex flex-col gap-[22px]">
+        <div
+          className={`flex flex-col gap-[22px] ${peeling ? "animate-page-peel" : ""}`}
+        >
           <div>
             <h1 className="relative font-display text-[clamp(40px,12vw,54px)] leading-[0.9] font-black tracking-[-0.01em] uppercase text-goa-yellow">
               Your HH
@@ -155,7 +194,7 @@ export function IdentityStudio() {
                 previewUrl={photo.previewUrl}
                 onFile={handleFile}
               />
-              <Button onClick={handleNext} disabled={uploading}>
+              <Button onClick={handleNext} disabled={uploading || peeling}>
                 {format === "pfp" ? "Generate my frame" : "Add your details"}
               </Button>
             </div>
@@ -168,12 +207,14 @@ export function IdentityStudio() {
       )}
 
       {screen === "form" && (
-        <BuilderForm
-          value={input}
-          onChange={(patch) => setInput((current) => ({ ...current, ...patch }))}
-          onBack={() => setScreen("landing")}
-          onSubmit={() => photo && void runGeneration(photo, "id")}
-        />
+        <div className={peeling ? "animate-page-peel" : ""}>
+          <BuilderForm
+            value={input}
+            onChange={(patch) => setInput((current) => ({ ...current, ...patch }))}
+            onBack={() => setScreen("landing")}
+            onSubmit={handleFormSubmit}
+          />
+        </div>
       )}
 
       {screen === "generating" && <GeneratingState />}

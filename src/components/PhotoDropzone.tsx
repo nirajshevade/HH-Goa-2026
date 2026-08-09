@@ -15,6 +15,9 @@ interface PhotoDropzoneProps {
  * The empty state. A real `<input type="file">` inside a `<label>`, so it is
  * keyboard-reachable, announced correctly, and opens the camera roll on iOS
  * and Android without any JavaScript shim.
+ *
+ * On drag-over the dashed border transforms into a retro viewfinder with
+ * corner brackets and a sweeping scanner line.
  */
 export function PhotoDropzone({ onFile, busy }: PhotoDropzoneProps) {
   const [dragging, setDragging] = useState(false);
@@ -35,10 +38,10 @@ export function PhotoDropzone({ onFile, busy }: PhotoDropzoneProps) {
         const file = event.dataTransfer.files?.[0];
         if (file) onFile(file);
       }}
-      className={`relative flex cursor-pointer flex-col items-center gap-3 rounded-[28px] border-2 border-dashed px-5 py-[34px] transition-colors has-[:focus-visible]:outline has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-goa-yellow ${
+      className={`relative flex cursor-pointer flex-col items-center gap-3 rounded-[28px] px-5 py-[34px] transition-all duration-200 has-[:focus-visible]:outline has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-goa-yellow ${
         dragging
-          ? "border-goa-yellow bg-goa-yellow/10"
-          : "border-goa-yellow/45 bg-goa-deep"
+          ? "border-2 border-transparent bg-goa-deep/80 scale-[1.02]"
+          : "border-2 border-dashed border-goa-yellow/45 bg-goa-deep"
       } ${busy ? "pointer-events-none opacity-60" : ""}`}
     >
       <input
@@ -55,14 +58,34 @@ export function PhotoDropzone({ onFile, busy }: PhotoDropzoneProps) {
         }}
         className="sr-only"
       />
+
+      {/* ── Viewfinder brackets and scanner (visible only when dragging) ── */}
+      {dragging && (
+        <>
+          <div className="viewfinder-bracket viewfinder-bracket--tl" />
+          <div className="viewfinder-bracket viewfinder-bracket--tr" />
+          <div className="viewfinder-bracket viewfinder-bracket--bl" />
+          <div className="viewfinder-bracket viewfinder-bracket--br" />
+          <div className="viewfinder-scanner" />
+        </>
+      )}
+
       <span
         aria-hidden="true"
-        className="flex h-[46px] w-[46px] items-center justify-center rounded-full bg-goa-yellow font-display text-[26px] leading-none font-black text-goa-green"
+        className={`flex h-[46px] w-[46px] items-center justify-center rounded-full font-display text-[26px] leading-none font-black transition-transform duration-200 ${
+          dragging
+            ? "bg-goa-pink text-goa-cream scale-110"
+            : "bg-goa-yellow text-goa-green"
+        }`}
       >
         +
       </span>
       <span className="text-[14px] leading-[1.3] font-bold">
-        {busy ? "Reading your photo…" : "Upload your photo"}
+        {busy
+          ? "Reading your photo…"
+          : dragging
+            ? "Drop it right here"
+            : "Upload your photo"}
       </span>
       <span
         id={hintId}
